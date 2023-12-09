@@ -22,6 +22,11 @@ KompuraAudioProcessor::KompuraAudioProcessor()
                        )
 #endif
 {
+    threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
+    attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
+    release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
+    ratio = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Ratio"));
+    bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Bypass"));
 }
 
 KompuraAudioProcessor::~KompuraAudioProcessor()
@@ -95,6 +100,13 @@ void KompuraAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    juce::dsp::ProcessSpec spec;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = getTotalNumInputChannels();
+
+    compressor.prepare(spec);
 }
 
 void KompuraAudioProcessor::releaseResources()
@@ -144,18 +156,16 @@ void KompuraAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    compressor.setThreshold(threshold->get());
+    compressor.setAttack(attack->get());
+    compressor.setRelease(release->get());
+    compressor.setRatio(ratio->get());
 
-        // ..do something to the data...
-    }
+    auto block = juce::dsp::AudioBlock<float>(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
+    context.isBypassed = bypass->get();
+
+    compressor.process(context);
 }
 
 //==============================================================================
@@ -166,7 +176,8 @@ bool KompuraAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* KompuraAudioProcessor::createEditor()
 {
-    return new KompuraAudioProcessorEditor (*this);
+    //return new KompuraAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -175,12 +186,63 @@ void KompuraAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void KompuraAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    juce::ValueTree tree = juce::ValueTree::readFromData(data, sizeInBytes);
+
+    if (tree.isValid())
+    {
+		apvts.replaceState(tree);
+	}
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::createParameterLayout()
+{
+    APVTS::ParameterLayout layout;
+
+    using namespace juce;
+
+    layout.add(std::make_unique<AudioParameterFloat>(
+        "Threshold",
+        "Threshold",
+        NormalisableRange<float>(-60, 12, 1, 1),
+        0
+    ));
+
+    NormalisableRange<float> attackReleaseRange = NormalisableRange<float>(5, 500, 1, 1);
+
+    layout.add(std::make_unique<AudioParameterFloat>(
+        "Attack",
+        "Attack",
+        attackReleaseRange,
+        50
+    ));
+
+    layout.add(std::make_unique<AudioParameterFloat>(
+        "Release",
+		"Release",
+		attackReleaseRange,
+		250
+    ));
+
+    layout.add(std::make_unique<AudioParameterFloat>(
+		"Ratio",
+		"Ratio",
+		NormalisableRange<float>(1, 20, 0.1, 1),
+		2
+	));
+
+    layout.add(std::make_unique<AudioParameterBool>("Bypass", "Bypass", false));
+
+    return layout;
 }
 
 //==============================================================================
