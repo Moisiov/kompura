@@ -4,6 +4,9 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="ValtoAudio"
               version="0.0.1">
   <MAINGROUP id="iTm6cp" name="Kompura">
+    <GROUP id="{D1D64FFF-E415-CF49-1DD4-30BA1B4C8216}" name="Assets">
+      <FILE id="KnquMg" name="logo.jpg" compile="0" resource="1" file="Assets/logo.jpg"/>
+    </GROUP>
     <GROUP id="{8ABCF8BA-C741-AFCC-4BDF-8D0E5A59B10D}" name="Source">
       <FILE id="kNxMF2" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
