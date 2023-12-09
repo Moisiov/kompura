@@ -25,46 +25,28 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
 
     auto enabled = slider.isEnabled();
 
-    g.setColour(enabled ? Colour(97u, 18u, 167u) : Colours::darkgrey);
-    g.fillEllipse(bounds);
+    slider.setColour(Slider::thumbColourId, Colours::white);
+    LookAndFeel_V4::drawRotarySlider(g, x, y, width, height, sliderPosProportional, rotaryStartAngle, rotaryEndAngle, slider);
 
-    g.setColour(enabled ? Colour(255u, 154u, 1u) : Colours::grey);
-    g.drawEllipse(bounds, 1.f);
+    auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider);
+    Rectangle<float> r;
+    auto center = bounds.getCentre();
+    r.setLeft(center.getX() - 2);
+    r.setRight(center.getX() + 2);
+    r.setTop(bounds.getY());
+    r.setBottom(center.getY() - rswl->getTextHeight() * 1.5);
+    g.setFont(rswl->getTextHeight());
+    auto text = rswl->getDisplayString();
+    auto strWidth = g.getCurrentFont().getStringWidth(text);
 
-    if (auto* rswl = dynamic_cast<RotarySliderWithLabels*>(&slider))
-    {
-        auto center = bounds.getCentre();
-        Path p;
+    r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
+    r.setCentre(bounds.getCentre());
 
-        Rectangle<float> r;
-        r.setLeft(center.getX() - 2);
-        r.setRight(center.getX() + 2);
-        r.setTop(bounds.getY());
-        r.setBottom(center.getY() - rswl->getTextHeight() * 1.5);
+    g.setColour(enabled ? Colours::black : Colours::darkgrey);
+    g.fillRect(r);
 
-        p.addRoundedRectangle(r, 2.f);
-
-        jassert(rotaryStartAngle < rotaryEndAngle);
-
-        auto sliderAngRad = jmap(sliderPosProportional, 0.f, 1.f, rotaryStartAngle, rotaryEndAngle);
-
-        p.applyTransform(AffineTransform().rotated(sliderAngRad, center.getX(), center.getY()));
-
-        g.fillPath(p);
-
-        g.setFont(rswl->getTextHeight());
-        auto text = rswl->getDisplayString();
-        auto strWidth = g.getCurrentFont().getStringWidth(text);
-
-        r.setSize(strWidth + 4, rswl->getTextHeight() + 2);
-        r.setCentre(bounds.getCentre());
-
-        g.setColour(enabled ? Colours::black : Colours::darkgrey);
-        g.fillRect(r);
-
-        g.setColour(enabled ? Colours::white : Colours::lightgrey);
-        g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
-    }
+    g.setColour(enabled ? Colours::white : Colours::lightgrey);
+    g.drawFittedText(text, r.toNearestInt(), juce::Justification::centred, 1);
 }
 
 void LookAndFeel::drawToggleButton(juce::Graphics& g,
@@ -126,32 +108,9 @@ void RotarySliderWithLabels::paint(juce::Graphics& g)
         endAng,
         *this);
 
-    auto center = sliderBounds.toFloat().getCentre();
-    auto radius = sliderBounds.getWidth() * 0.5f;
-
-    g.setColour(Colour(0u, 172u, 1u));
-    g.setFont(getTextHeight());
-
-    auto numChoices = labels.size();
-    for (int i = 0; i < numChoices; ++i)
-    {
-        auto pos = labels[i].pos;
-        jassert(0.f <= pos);
-        jassert(pos <= 1.f);
-
-        auto ang = jmap(pos, 0.f, 1.f, startAng, endAng);
-
-        auto c = center.getPointOnCircumference(radius + getTextHeight() * 0.5f + 1, ang);
-
-        Rectangle<float> r;
-        auto str = labels[i].label;
-        r.setSize(g.getCurrentFont().getStringWidth(str), getTextHeight());
-        r.setCentre(c);
-        r.setY(r.getY() + getTextHeight());
-
-        g.drawFittedText(str, r.toNearestInt(), juce::Justification::centred, 1);
-    }
-
+    auto bounds = getLocalBounds();
+    g.setColour(Colours::white);
+    g.drawFittedText(getName(), bounds.removeFromBottom(getTextHeight() * 2), Justification::centredTop, 1);
 }
 
 juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
@@ -172,35 +131,23 @@ juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const
 
 juce::String RotarySliderWithLabels::getDisplayString() const
 {
-    if (auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param))
-        return choiceParam->getCurrentChoiceName();
-
     juce::String str;
-    bool addK = false;
 
-    if (auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param))
-    {
-        float val = getValue();
+    auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param);
+    float val = getValue();
 
-        if (val > 999.f)
-        {
-            val /= 1000.f; //1001 / 1000 = 1.001
-            addK = true;
-        }
-
-        str = juce::String(val, (addK ? 2 : 0));
+    float interval = floatParam->getNormalisableRange().interval;
+    if (interval == std::floor(interval)) {
+        str = juce::String((int)val);
     }
-    else
-    {
-        jassertfalse; //this shouldn't happen!
-    }
+    else {
+		str = juce::String(val, 1);
+	}
+    
 
     if (suffix.isNotEmpty())
     {
         str << " ";
-        if (addK)
-            str << "k";
-
         str << suffix;
     }
 
@@ -218,20 +165,30 @@ ControlKnobs::ControlKnobs(juce::AudioProcessorValueTreeState& apvts)
     using namespace Params;
     const auto& params = GetParams();
 
+    auto getParamHelper = [&params, &apvts](const auto& name) -> auto&
+    {
+        return getParam(apvts, params, name);
+    };
+
+    attackSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Attack), "ms", params.at(Names::Attack));
+    releaseSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Release), "ms", params.at(Names::Release));
+    thresholdSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Threshold), "dB", params.at(Names::Threshold));
+    ratioSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Ratio), "", params.at(Names::Ratio));
+
     auto makeAttachmentHelper = [&params, &apvts](auto& attachment, const auto& name, auto& slider)
     {
             makeAttachment(attachment, apvts, params, name, slider);
 	};
 
-    makeAttachmentHelper(attackAttachment, Names::Attack, attackSlider);
-    makeAttachmentHelper(releaseAttachment, Names::Release, releaseSlider);
-    makeAttachmentHelper(thresholdAttachment, Names::Threshold, thresholdSlider);
-    makeAttachmentHelper(ratioAttachment, Names::Ratio, ratioSlider);
+    makeAttachmentHelper(attackAttachment, Names::Attack, *attackSlider);
+    makeAttachmentHelper(releaseAttachment, Names::Release, *releaseSlider);
+    makeAttachmentHelper(thresholdAttachment, Names::Threshold, *thresholdSlider);
+    makeAttachmentHelper(ratioAttachment, Names::Ratio, *ratioSlider);
 
-    addAndMakeVisible(attackSlider);
-    addAndMakeVisible(releaseSlider);
-    addAndMakeVisible(thresholdSlider);
-    addAndMakeVisible(ratioSlider);
+    addAndMakeVisible(*attackSlider);
+    addAndMakeVisible(*releaseSlider);
+    addAndMakeVisible(*thresholdSlider);
+    addAndMakeVisible(*ratioSlider);
 }
 
 void ControlKnobs::paint(juce::Graphics& g)
@@ -246,12 +203,12 @@ void ControlKnobs::resized()
     FlexBox attackRelease;
     attackRelease.flexDirection = FlexBox::Direction::row;
     attackRelease.flexWrap = FlexBox::Wrap::noWrap;
-    attackRelease.items.add(FlexItem(attackSlider).withFlex(1.0f));
-    attackRelease.items.add(FlexItem(releaseSlider).withFlex(1.0f));
+    attackRelease.items.add(FlexItem(*attackSlider).withFlex(1.0f));
+    attackRelease.items.add(FlexItem(*releaseSlider).withFlex(1.0f));
 
     FlexBox thresholdRatio;
-    thresholdRatio.items.add(FlexItem(thresholdSlider).withFlex(1.0f));
-    thresholdRatio.items.add(FlexItem(ratioSlider).withFlex(1.0f));
+    thresholdRatio.items.add(FlexItem(*thresholdSlider).withFlex(1.0f));
+    thresholdRatio.items.add(FlexItem(*ratioSlider).withFlex(1.0f));
 
     attackRelease.performLayout(bounds.removeFromTop(bounds.getHeight()/2).toFloat());
     thresholdRatio.performLayout(bounds.toFloat());

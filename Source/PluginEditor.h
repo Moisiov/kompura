@@ -20,12 +20,13 @@ struct LookAndFeel : juce::LookAndFeel_V4 {
 };
 
 struct RotarySliderWithLabels : juce::Slider {
-    RotarySliderWithLabels(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
+    RotarySliderWithLabels(juce::RangedAudioParameter& rap, const juce::String& unitSuffix, const juce::String& title) :
         juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
             juce::Slider::TextEntryBoxPosition::NoTextBox),
         param(&rap),
         suffix(unitSuffix)
     {
+        setName(title);
 		setLookAndFeel(&lnf);
 	}
 
@@ -73,6 +74,14 @@ void makeAttachment(std::unique_ptr<Attachment>& attachment,
     attachment = std::make_unique<Attachment>(apvts, params.at(name), slider);
 }
 
+template<typename APVTS, typename Params, typename Name>
+juce::RangedAudioParameter& getParam(APVTS& apvts, const Params& params, const Name& name) 
+{
+    auto param = apvts.getParameter(params.at(name));
+    jassert(param != nullptr);
+    return *param;
+}
+
 struct Logo : juce::Component {
     void paint(juce::Graphics& g) override;
 };
@@ -82,7 +91,7 @@ struct ControlKnobs : juce::Component {
     void paint(juce::Graphics& g) override;
     void resized() override;
 private:
-    RotarySlider attackSlider, releaseSlider, thresholdSlider, ratioSlider;
+    std::unique_ptr<RotarySliderWithLabels> attackSlider, releaseSlider, thresholdSlider, ratioSlider;
 
     using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     std::unique_ptr<Attachment> attackAttachment, releaseAttachment, thresholdAttachment, ratioAttachment;
