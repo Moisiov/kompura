@@ -22,13 +22,25 @@ KompuraAudioProcessor::KompuraAudioProcessor()
                        )
 #endif
 {
-    inputGainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("InputGain"));
-    compressor.threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
-    compressor.attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
-    compressor.release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
-    compressor.ratio = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Ratio"));
-    compressor.bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Bypass"));
-    outputGainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("OutputGain"));
+
+    using namespace Params;
+    const auto& params = GetParams();
+
+    auto floatHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName) {
+		param = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter(paramName));
+	};
+
+    auto boolHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName) {
+        param = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter(paramName));
+    };
+
+    floatHelper(inputGainParam, params.at(Names::InputGain));
+    floatHelper(compressor.threshold, params.at(Names::Threshold));
+    floatHelper(compressor.attack, params.at(Names::Attack));
+    floatHelper(compressor.release, params.at(Names::Release));
+    floatHelper(compressor.ratio, params.at(Names::Ratio));
+    floatHelper(outputGainParam, params.at(Names::OutputGain));
+    boolHelper(compressor.bypass, params.at(Names::Bypass));
 }
 
 KompuraAudioProcessor::~KompuraAudioProcessor()
@@ -164,15 +176,20 @@ void KompuraAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    inputGain.setGainDecibels(inputGainParam->get());
-    outputGain.setGainDecibels(outputGainParam->get());
+    updateState();
 
     applyGain(buffer, inputGain);
 
-    compressor.updateCompressorSettings();
     compressor.process(buffer);
 
     applyGain(buffer, outputGain);
+}
+
+void KompuraAudioProcessor::updateState()
+{
+    compressor.updateCompressorSettings();
+    inputGain.setGainDecibels(inputGainParam->get());
+    outputGain.setGainDecibels(outputGainParam->get());
 }
 
 //==============================================================================
@@ -183,8 +200,8 @@ bool KompuraAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* KompuraAudioProcessor::createEditor()
 {
-    //return new KompuraAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new KompuraAudioProcessorEditor (*this);
+    //return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -216,50 +233,57 @@ juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::creat
     APVTS::ParameterLayout layout;
 
     using namespace juce;
+    using namespace Params;
+    const auto& params = GetParams();
 
-    layout.add(std::make_unique<AudioParameterBool>("Bypass", "Bypass", false));
+    auto gainRange = NormalisableRange<float>(-24.f, 24.f, 0.1, 1);
+    auto attackReleaseRange = NormalisableRange<float>(0, 500, 1, 1);
+
+    layout.add(std::make_unique<AudioParameterBool>(
+        params.at(Names::Bypass),
+        params.at(Names::Bypass),
+        false
+    ));
 
     layout.add(std::make_unique<AudioParameterFloat>(
-        "InputGain",
-		"InputGain",
-		NormalisableRange<float>(-24.f, 24.f, 0.1, 1),
+        params.at(Names::InputGain),
+        params.at(Names::InputGain),
+		gainRange,
 		0
 	));
 
     layout.add(std::make_unique<AudioParameterFloat>(
-        "Threshold",
-        "Threshold",
-        NormalisableRange<float>(-60, 12, 1, 1),
+        params.at(Names::Threshold),
+        params.at(Names::Threshold),
+        NormalisableRange<float>(-60, 12, 0.1, 1),
         0
     ));
 
-    NormalisableRange<float> attackReleaseRange = NormalisableRange<float>(5, 500, 1, 1);
-
     layout.add(std::make_unique<AudioParameterFloat>(
-        "Attack",
-        "Attack",
+        params.at(Names::Attack),
+        params.at(Names::Attack),
         attackReleaseRange,
         50
     ));
 
     layout.add(std::make_unique<AudioParameterFloat>(
-        "Release",
-		"Release",
+        params.at(Names::Release),
+        params.at(Names::Release),
 		attackReleaseRange,
 		250
     ));
 
     layout.add(std::make_unique<AudioParameterFloat>(
-		"Ratio",
-		"Ratio",
+        params.at(Names::Ratio),
+        params.at(Names::Ratio),
 		NormalisableRange<float>(1, 20, 0.1, 1),
 		2
 	));
 
     layout.add(std::make_unique<AudioParameterFloat>(
-        "OutputGain",
-        "OutputGain",
-        NormalisableRange<float>(-24.f, 24.f, 0.1, 1),
+        params.at(Names::OutputGain),
+        params.at(Names::OutputGain),
+        gainRange,
         0)
     );
 

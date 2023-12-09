@@ -12,6 +12,31 @@
 
 //==============================================================================
 
+namespace Params {
+    enum Names {
+        Threshold,
+        Attack,
+        Release,
+        Ratio,
+        Bypass,
+        InputGain,
+        OutputGain
+    };
+
+    inline const std::map<Names, juce::String>& GetParams() {
+        static const std::map<Names, juce::String> params = {
+			{ Threshold, "Threshold" },
+			{ Attack, "Attack" },
+			{ Release, "Release" },
+			{ Ratio, "Ratio" },
+			{ Bypass, "Bypass" },
+			{ InputGain, "InputGain" },
+			{ OutputGain, "OutputGain" }
+		};
+        return params;
+    }
+}
+
 struct CompressorBand {
 public:
     juce::AudioParameterFloat* threshold = nullptr;
@@ -89,6 +114,8 @@ public:
 
 private:
     CompressorBand compressor;
+
+    void updateState();
 
     juce::dsp::Gain<float> inputGain, outputGain;
     juce::AudioParameterFloat* inputGainParam = nullptr;
