@@ -11,8 +11,38 @@
 #include <JuceHeader.h>
 
 //==============================================================================
-/**
-*/
+
+struct CompressorBand {
+public:
+    juce::AudioParameterFloat* threshold = nullptr;
+    juce::AudioParameterFloat* attack = nullptr;
+    juce::AudioParameterFloat* release = nullptr;
+    juce::AudioParameterFloat* ratio = nullptr;
+    juce::AudioParameterBool* bypass = nullptr;
+
+    void prepare(const juce::dsp::ProcessSpec& spec) {
+		compressor.prepare(spec);
+	}
+
+    void updateCompressorSettings() {
+		compressor.setThreshold(threshold->get());
+		compressor.setAttack(attack->get());
+		compressor.setRelease(release->get());
+		compressor.setRatio(ratio->get());
+	}
+
+    void process(juce::AudioBuffer<float>& buffer) {
+        auto block = juce::dsp::AudioBlock<float>(buffer);
+        auto context = juce::dsp::ProcessContextReplacing<float>(block);
+        context.isBypassed = bypass->get();
+
+        compressor.process(context);
+    }
+
+private :
+	juce::dsp::Compressor<float> compressor;
+};
+
 class KompuraAudioProcessor  : public juce::AudioProcessor
 {
 public:
@@ -58,13 +88,18 @@ public:
     APVTS apvts { *this, nullptr, "Parameters", createParameterLayout() };
 
 private:
-    juce::dsp::Compressor<float> compressor;
+    CompressorBand compressor;
 
-    juce::AudioParameterFloat* threshold = nullptr;
-    juce::AudioParameterFloat* attack = nullptr;
-    juce::AudioParameterFloat* release = nullptr;
-    juce::AudioParameterFloat* ratio = nullptr;
-    juce::AudioParameterBool* bypass = nullptr;
+    juce::dsp::Gain<float> inputGain, outputGain;
+    juce::AudioParameterFloat* inputGainParam = nullptr;
+    juce::AudioParameterFloat* outputGainParam = nullptr;
+
+    template<typename T, typename U>
+    void applyGain(T& buffer, U& dsp) {
+		auto block = juce::dsp::AudioBlock<float>(buffer);
+        auto context = juce::dsp::ProcessContextReplacing<float>(block);
+        dsp.process(context);
+	}
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (KompuraAudioProcessor)

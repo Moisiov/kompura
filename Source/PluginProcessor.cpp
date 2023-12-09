@@ -22,11 +22,13 @@ KompuraAudioProcessor::KompuraAudioProcessor()
                        )
 #endif
 {
-    threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
-    attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
-    release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
-    ratio = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Ratio"));
-    bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Bypass"));
+    inputGainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("InputGain"));
+    compressor.threshold = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Threshold"));
+    compressor.attack = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Attack"));
+    compressor.release = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Release"));
+    compressor.ratio = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("Ratio"));
+    compressor.bypass = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("Bypass"));
+    outputGainParam = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("OutputGain"));
 }
 
 KompuraAudioProcessor::~KompuraAudioProcessor()
@@ -106,6 +108,12 @@ void KompuraAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     spec.sampleRate = sampleRate;
     spec.numChannels = getTotalNumInputChannels();
 
+    inputGain.prepare(spec);
+    outputGain.prepare(spec);
+
+    inputGain.setRampDurationSeconds(0.05);
+    outputGain.setRampDurationSeconds(0.05);
+
     compressor.prepare(spec);
 }
 
@@ -156,16 +164,15 @@ void KompuraAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    compressor.setThreshold(threshold->get());
-    compressor.setAttack(attack->get());
-    compressor.setRelease(release->get());
-    compressor.setRatio(ratio->get());
+    inputGain.setGainDecibels(inputGainParam->get());
+    outputGain.setGainDecibels(outputGainParam->get());
 
-    auto block = juce::dsp::AudioBlock<float>(buffer);
-    auto context = juce::dsp::ProcessContextReplacing<float>(block);
-    context.isBypassed = bypass->get();
+    applyGain(buffer, inputGain);
 
-    compressor.process(context);
+    compressor.updateCompressorSettings();
+    compressor.process(buffer);
+
+    applyGain(buffer, outputGain);
 }
 
 //==============================================================================
@@ -210,6 +217,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::creat
 
     using namespace juce;
 
+    layout.add(std::make_unique<AudioParameterBool>("Bypass", "Bypass", false));
+
+    layout.add(std::make_unique<AudioParameterFloat>(
+        "InputGain",
+		"InputGain",
+		NormalisableRange<float>(-24.f, 24.f, 0.1, 1),
+		0
+	));
+
     layout.add(std::make_unique<AudioParameterFloat>(
         "Threshold",
         "Threshold",
@@ -240,7 +256,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::creat
 		2
 	));
 
-    layout.add(std::make_unique<AudioParameterBool>("Bypass", "Bypass", false));
+    layout.add(std::make_unique<AudioParameterFloat>(
+        "OutputGain",
+        "OutputGain",
+        NormalisableRange<float>(-24.f, 24.f, 0.1, 1),
+        0)
+    );
 
     return layout;
 }
