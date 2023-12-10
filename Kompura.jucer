@@ -58,7 +58,7 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Kompura" enablePluginBinaryCopyStep="1"
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Kompura5000" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation="D:\Program Files\Common Files\VST3"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="Kompura" enablePluginBinaryCopyStep="1"
                        vst3BinaryLocation="D:\Program Files\Common Files\VST3"/>
