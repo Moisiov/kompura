@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "Params.h"
 
 //==============================================================================
 KompuraAudioProcessor::KompuraAudioProcessor()
@@ -200,7 +201,7 @@ bool KompuraAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* KompuraAudioProcessor::createEditor()
 {
-    return new KompuraAudioProcessorEditor (*this);
+    return new KompuraAudioProcessorEditor(*this);
     //return new juce::GenericAudioProcessorEditor(*this);
 }
 

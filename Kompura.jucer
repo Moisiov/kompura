@@ -8,13 +8,32 @@
       <FILE id="KnquMg" name="logo.jpg" compile="0" resource="1" file="Assets/logo.jpg"/>
     </GROUP>
     <GROUP id="{8ABCF8BA-C741-AFCC-4BDF-8D0E5A59B10D}" name="Source">
+      <FILE id="qUgq4B" name="CompressorBand.cpp" compile="1" resource="0"
+            file="Source/CompressorBand.cpp"/>
+      <FILE id="oqB5Ex" name="CompressorBand.h" compile="0" resource="0"
+            file="Source/CompressorBand.h"/>
+      <FILE id="cPMuMv" name="Params.cpp" compile="1" resource="0" file="Source/Params.cpp"/>
+      <FILE id="KY0Y8b" name="Params.h" compile="0" resource="0" file="Source/Params.h"/>
+      <FILE id="wpelto" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="MxF4l2" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
       <FILE id="kNxMF2" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="x79i0U" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="wpelto" name="PluginEditor.cpp" compile="1" resource="0"
-            file="Source/PluginEditor.cpp"/>
-      <FILE id="MxF4l2" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <GROUP id="{DED26465-EEA5-6109-EFDA-B8F62F0BA153}" name="UI">
+        <FILE id="TQSXMt" name="ControlKnobs.cpp" compile="1" resource="0"
+              file="Source/UI/ControlKnobs.cpp"/>
+        <FILE id="yPeYUy" name="ControlKnobs.h" compile="0" resource="0" file="Source/UI/ControlKnobs.h"/>
+        <FILE id="vOlMEa" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/UI/LookAndFeel.cpp"/>
+        <FILE id="xpLTNU" name="LookAndFeel.h" compile="0" resource="0" file="Source/UI/LookAndFeel.h"/>
+        <FILE id="RhQsE9" name="RotarySliderWithLabels.cpp" compile="1" resource="0"
+              file="Source/UI/RotarySliderWithLabels.cpp"/>
+        <FILE id="wG7eph" name="RotarySliderWithLabels.h" compile="0" resource="0"
+              file="Source/UI/RotarySliderWithLabels.h"/>
+        <FILE id="BJu9Cj" name="Utility.cpp" compile="1" resource="0" file="Source/UI/Utility.cpp"/>
+        <FILE id="PFESpl" name="Utility.h" compile="0" resource="0" file="Source/UI/Utility.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
   <MODULES>
