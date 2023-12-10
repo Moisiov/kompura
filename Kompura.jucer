@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="tdy7Ir" name="Kompura" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="tdy7Ir" name="Kompura5000" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="ValtoAudio"
               version="0.0.1">
-  <MAINGROUP id="iTm6cp" name="Kompura">
+  <MAINGROUP id="iTm6cp" name="Kompura5000">
     <GROUP id="{D1D64FFF-E415-CF49-1DD4-30BA1B4C8216}" name="Assets">
       <FILE id="KnquMg" name="logo.jpg" compile="0" resource="1" file="Assets/logo.jpg"/>
     </GROUP>
@@ -25,6 +25,8 @@
         <FILE id="TQSXMt" name="ControlKnobs.cpp" compile="1" resource="0"
               file="Source/UI/ControlKnobs.cpp"/>
         <FILE id="yPeYUy" name="ControlKnobs.h" compile="0" resource="0" file="Source/UI/ControlKnobs.h"/>
+        <FILE id="mvFJiN" name="GainControl.cpp" compile="1" resource="0" file="Source/UI/GainControl.cpp"/>
+        <FILE id="OO2mov" name="GainControl.h" compile="0" resource="0" file="Source/UI/GainControl.h"/>
         <FILE id="vOlMEa" name="LookAndFeel.cpp" compile="1" resource="0" file="Source/UI/LookAndFeel.cpp"/>
         <FILE id="xpLTNU" name="LookAndFeel.h" compile="0" resource="0" file="Source/UI/LookAndFeel.h"/>
         <FILE id="RhQsE9" name="RotarySliderWithLabels.cpp" compile="1" resource="0"

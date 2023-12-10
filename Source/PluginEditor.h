@@ -11,16 +11,11 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "./UI/ControlKnobs.h"
+#include "./UI/GainControl.h"
+#include "Params.h"
 
 struct Logo : juce::Component {
     void paint(juce::Graphics& g) override;
-};
-
-struct GainControls : juce::Slider {
-    GainControls() : juce::Slider(juce::Slider::SliderStyle::LinearBarVertical,
-        juce::Slider::TextEntryBoxPosition::NoTextBox) {}
-
-	//void paint(juce::Graphics& g) override;
 };
 
 class KompuraAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -38,7 +33,8 @@ private:
     // access the processor object that created it.
     KompuraAudioProcessor& audioProcessor;
 
-    GainControls inputGainControl, outputGainControl;
+    GainControl inputGainControl { audioProcessor.apvts, Params::Names::InputGain },
+        outputGainControl{ audioProcessor.apvts, Params::Names::OutputGain };
     ControlKnobs controlKnobs { audioProcessor.apvts };
     Logo logo;
 

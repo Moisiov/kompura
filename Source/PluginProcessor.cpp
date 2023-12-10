@@ -238,7 +238,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::creat
     const auto& params = GetParams();
 
     auto gainRange = NormalisableRange<float>(-24.f, 24.f, 0.1, 1);
-    auto attackReleaseRange = NormalisableRange<float>(0, 500, 1, 1);
+    auto attackRange = NormalisableRange<float>(0, 500, 1, 1);
+    auto releaseRange = NormalisableRange<float>(5, 500, 1, 1);
 
     layout.add(std::make_unique<AudioParameterBool>(
         params.at(Names::Bypass),
@@ -263,14 +264,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout KompuraAudioProcessor::creat
     layout.add(std::make_unique<AudioParameterFloat>(
         params.at(Names::Attack),
         params.at(Names::Attack),
-        attackReleaseRange,
+        attackRange,
         50
     ));
 
     layout.add(std::make_unique<AudioParameterFloat>(
         params.at(Names::Release),
         params.at(Names::Release),
-		attackReleaseRange,
+		releaseRange,
 		250
     ));
 

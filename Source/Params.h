@@ -20,8 +20,8 @@ namespace Params {
             { Release, "Release" },
             { Ratio, "Ratio" },
             { Bypass, "Bypass" },
-            { InputGain, "InputGain" },
-            { OutputGain, "OutputGain" }
+            { InputGain, "In" },
+            { OutputGain, "Out" }
         };
         return params;
     }

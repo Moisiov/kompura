@@ -8,9 +8,9 @@ ControlKnobs::ControlKnobs(juce::AudioProcessorValueTreeState& apvts)
     const auto& params = GetParams();
 
     auto getParamHelper = [&params, &apvts](const auto& name) -> auto&
-        {
-            return getParam(apvts, params, name);
-        };
+    {
+        return getParam(apvts, params, name);
+    };
 
     attackSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Attack), "ms", params.at(Names::Attack));
     releaseSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Release), "ms", params.at(Names::Release));
@@ -18,9 +18,9 @@ ControlKnobs::ControlKnobs(juce::AudioProcessorValueTreeState& apvts)
     ratioSlider = std::make_unique<RotarySliderWithLabels>(getParamHelper(Names::Ratio), "", params.at(Names::Ratio));
 
     auto makeAttachmentHelper = [&params, &apvts](auto& attachment, const auto& name, auto& slider)
-        {
-            makeAttachment(attachment, apvts, params, name, slider);
-        };
+    {
+        makeAttachment(attachment, apvts, params, name, slider);
+    };
 
     makeAttachmentHelper(attackAttachment, Names::Attack, *attackSlider);
     makeAttachmentHelper(releaseAttachment, Names::Release, *releaseSlider);

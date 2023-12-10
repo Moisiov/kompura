@@ -15,11 +15,6 @@ void Logo::paint(juce::Graphics& g)
     g.drawImage(logo, getLocalBounds().toFloat(), juce::RectanglePlacement::centred);
 }
 
-//void GainControls::paint(juce::Graphics& g)
-//{
-//}
-
-//==============================================================================
 KompuraAudioProcessorEditor::KompuraAudioProcessorEditor (KompuraAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
@@ -27,17 +22,15 @@ KompuraAudioProcessorEditor::KompuraAudioProcessorEditor (KompuraAudioProcessor&
     addAndMakeVisible(inputGainControl);
     addAndMakeVisible(outputGainControl);
     addAndMakeVisible(controlKnobs);
-    setSize (400, 300);
+    setSize (500, 300);
 }
 
 KompuraAudioProcessorEditor::~KompuraAudioProcessorEditor()
 {
 }
 
-//==============================================================================
 void KompuraAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(juce::Colours::black);
 
     g.setColour(juce::Colours::white);
@@ -48,8 +41,8 @@ void KompuraAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
 
+    inputGainControl.setBounds(bounds.removeFromLeft(64));
+    outputGainControl.setBounds(bounds.removeFromRight(64));
     logo.setBounds(bounds.removeFromTop(32));
-    inputGainControl.setBounds(bounds.removeFromLeft(32));
-    outputGainControl.setBounds(bounds.removeFromRight(32));
     controlKnobs.setBounds(bounds);
 }
